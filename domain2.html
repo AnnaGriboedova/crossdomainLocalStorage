@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Two</title>
+    <script type="text/javascript">
+        let storage = {
+            set: (key, value) => {
+                let isSuccess = false;
+                if (key) {
+                    window.localStorage.setItem(key, JSON.stringify(value));
+                    isSuccess = true;
+                }
+                return isSuccess;
+            },
+            get: (key) => {
+                return JSON.parse(window.localStorage.getItem(key));
+            },
+            remove: (key) => {
+                let isSuccess = false;
+                if (key && localStorage.getItem(key) !== null) {
+                    window.localStorage.removeItem(key);
+                    isSuccess = true;
+                }
+                return isSuccess;
+            }
+        };
+
+        let postMessageAsJson = (action, key, value = null, isSuccess, callback) => {
+            let obj = {
+                action,
+                status: isSuccess ? 'success' : 'failed',
+                callback: encodeURI(callback.toString())
+            };
+            if (key) obj.key = key;
+            if (value !== null) obj.value = value;
+
+            window.parent.postMessage(JSON.stringify(obj), '*')
+        };
+
+        window.addEventListener('message', messageHandler);
+
+        function messageHandler(event) {
+            const {action, key, value} = event.data;
+            let isSuccess = false;
+            let resultValue = null;
+
+            switch (action) {
+                case 'set':
+                    isSuccess = storage.set(key, value, callback);
+                    break;
+                case 'get':
+                    resultValue = storage.get(key, callback);
+                    isSuccess = (resultValue !== null);
+                    break;
+                case 'remove':
+                    isSuccess = storage.remove(key, callback);
+                    break;
+            }
+            postMessageAsJson(action, key, resultValue, isSuccess, callback);
+        }
+
+        const callback = () => {
+            console.log('___')
+        };
+
+        let setUserId = () => {
+            if (localStorage.getItem('userId') === null) {
+                localStorage.setItem('userId', '11111');
+            }
+        };
+        setUserId();
+    </script>
+</head>
+<body>
+<h1>Domain Two</h1>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>One</title>
+</head>
+<body>
+<h1>Domain One</h1>
+<iframe src="http://domain2.html" id="domain2_iframe"></iframe>
+<script>
+    window.onload = () => {
+
+        let helperFrameWindow = document.getElementById('domain2_iframe').contentWindow;
+
+        let getItem = (key) => {
+            helperFrameWindow.postMessage({action: 'get', key}, '*');
+        };
+        let removeItem = (key) => {
+            helperFrameWindow.postMessage({action: 'remove', key}, '*');
+        };
+        let setItem = (key, value) => {
+            helperFrameWindow.postMessage({action: 'set', key, value}, '*');
+        };
+
+        window.addEventListener('message', (e) => {
+            let data = JSON.parse(e.data);
+
+            let callback = () => {
+                eval('(' + decodeURI(data.callback) + ')();')
+            };
+
+            switch (data.status) {
+                case 'success':
+                    logSuccessResult(data);
+                    callback();
+                    break;
+                case 'failed':
+                    break;
+
+            }
+        });
+
+        getItem('userId');
+
+        setTimeout(() => {
+            setItem('userId', 999);
+        }, 10000);
+
+        setTimeout(() => {
+            removeItem('userId');
+        }, 20000);
+    };
+
+    function logSuccessResult(data) {
+        switch (data.action) {
+            case 'get':
+                console.log(data.key + ':' + data.value);
+                break;
+            case'set':
+                console.log('written');
+                break;
+            case 'remove':
+                console.log('removed')
+        }
+    }
+</script>
+</body>
+</html>
